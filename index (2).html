@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выживание</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: #aaa;
+            font-weight: 300;
+        }
+        
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        
+        .main-panel {
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 2px;
+            padding: 20px;
+            min-height: 500px;
+        }
+        
+        .location-description {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .location-description h2 {
+            font-size: 1.4rem;
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .location-description p {
+            color: #ccc;
+            line-height: 1.6;
+        }
+        
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .action-btn {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        
+        .action-btn:hover {
+            background-color: #222;
+            border-color: #555;
+        }
+        
+        .action-btn:active {
+            background-color: #151515;
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .action-btn:disabled:hover {
+            background-color: #1a1a1a;
+            border-color: #333;
+        }
+        
+        .events-log {
+            background-color: #0d0d0d;
+            border: 1px solid #333;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+        
+        .event {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .event:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .event-time {
+            color: #666;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .stats-panel, .inventory-panel, .conditions-panel {
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 2px;
+            padding: 20px;
+        }
+        
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 15px;
+            color: #fff;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .stat-name {
+            color: #ccc;
+        }
+        
+        .stat-value {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .inventory-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+        }
+        
+        .item-name {
+            color: #ccc;
+        }
+        
+        .item-count {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .condition {
+            margin-bottom: 15px;
+        }
+        
+        .condition-name {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+        
+        .condition-bar {
+            height: 6px;
+            background-color: #333;
+            position: relative;
+        }
+        
+        .condition-fill {
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .health .condition-fill {
+            background-color: #d32f2f;
+        }
+        
+        .hunger .condition-fill {
+            background-color: #f57c00;
+        }
+        
+        .thirst .condition-fill {
+            background-color: #1976d2;
+        }
+        
+        .energy .condition-fill {
+            background-color: #388e3c;
+        }
+        
+        .temperature .condition-fill {
+            background-color: #7b1fa2;
+        }
+        
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            display: none;
+        }
+        
+        .game-over-content {
+            background-color: #111;
+            border: 1px solid #333;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .game-over h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #fff;
+            font-weight: 400;
+        }
+        
+        .game-over p {
+            margin-bottom: 25px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+        
+        .restart-btn {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .restart-btn:hover {
+            background-color: #222;
+            border-color: #555;
+        }
+        
+        @media (max-width: 768px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>ВЫЖИВАНИЕ</h1>
+            <p class="subtitle">Боритесь с голодом, жаждой и стихией, чтобы выжить</p>
+        </header>
+        
+        <div class="game-layout">
+            <div class="main-panel">
+                <div class="location-description">
+                    <h2 id="location-name">ЛЕС</h2>
+                    <p id="location-description">Вы находитесь в густом лесу. Вокруг вас деревья, кусты и следы диких животных. Воздух прохладен и влажен.</p>
+                </div>
+                
+                <div class="actions">
+                    <button class="action-btn" id="gather-wood">Собрать дрова</button>
+                    <button class="action-btn" id="hunt">Охотиться</button>
+                    <button class="action-btn" id="explore">Исследовать местность</button>
+                    <button class="action-btn" id="rest">Отдыхать</button>
+                    <button class="action-btn" id="build-shelter">Построить укрытие</button>
+                    <button class="action-btn" id="make-fire">Разжечь костер</button>
+                    <button class="action-btn" id="find-water">Найти воду</button>
+                    <button class="action-btn" id="craft-tools">Создать инструменты</button>
+                </div>
+                
+                <h3 class="panel-title">ЖУРНАЛ СОБЫТИЙ</h3>
+                <div class="events-log" id="events-log">
+                    <div class="event">
+                        <span class="event-time">День 1, 08:00</span>
+                        <span>Вы оказались одни в незнакомом лесу. Нужно найти ресурсы для выживания.</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="stats-panel">
+                    <h3 class="panel-title">СТАТИСТИКА</h3>
+                    <div class="stat">
+                        <span class="stat-name">День:</span>
+                        <span class="stat-value" id="day-count">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">Время:</span>
+                        <span class="stat-value" id="time">08:00</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">Температура:</span>
+                        <span class="stat-value" id="temperature">15°C</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">Погода:</span>
+                        <span class="stat-value" id="weather">Ясно</span>
+                    </div>
+                </div>
+                
+                <div class="conditions-panel">
+                    <h3 class="panel-title">СОСТОЯНИЕ</h3>
+                    <div class="condition health">
+                        <div class="condition-name">
+                            <span>Здоровье</span>
+                            <span id="health-value">100%</span>
+                        </div>
+                        <div class="condition-bar">
+                            <div class="condition-fill" id="health-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="condition hunger">
+                        <div class="condition-name">
+                            <span>Сытость</span>
+                            <span id="hunger-value">100%</span>
+                        </div>
+                        <div class="condition-bar">
+                            <div class="condition-fill" id="hunger-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="condition thirst">
+                        <div class="condition-name">
+                            <span>Жажда</span>
+                            <span id="thirst-value">100%</span>
+                        </div>
+                        <div class="condition-bar">
+                            <div class="condition-fill" id="thirst-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="condition energy">
+                        <div class="condition-name">
+                            <span>Энергия</span>
+                            <span id="energy-value">100%</span>
+                        </div>
+                        <div class="condition-bar">
+                            <div class="condition-fill" id="energy-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="condition temperature">
+                        <div class="condition-name">
+                            <span>Тепло</span>
+                            <span id="warmth-value">100%</span>
+                        </div>
+                        <div class="condition-bar">
+                            <div class="condition-fill" id="warmth-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="inventory-panel">
+                    <h3 class="panel-title">ИНВЕНТАРЬ</h3>
+                    <div class="inventory-items">
+                        <div class="inventory-item">
+                            <span class="item-name">Дрова</span>
+                            <span class="item-count" id="wood-count">5</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Еда</span>
+                            <span class="item-count" id="food-count">3</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Вода</span>
+                            <span class="item-count" id="water-count">2</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Инструменты</span>
+                            <span class="item-count" id="tools-count">0</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Материалы</span>
+                            <span class="item-count" id="materials-count">2</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Лекарства</span>
+                            <span class="item-count" id="medicine-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="game-over" id="game-over">
+        <div class="game-over-content">
+            <h2>ВЫЖИВАНИЕ ЗАВЕРШЕНО</h2>
+            <p id="game-over-reason">Вы не смогли выжить в суровых условиях.</p>
+            <p>Вы продержались <span id="survival-days">1</span> дней.</p>
+            <button class="restart-btn" id="restart-btn">Начать заново</button>
+        </div>
+    </div>
+
+    <script>
+        // Игровое состояние
+        const gameState = {
+            day: 1,
+            time: 480, // в минутах (8:00)
+            running: true,
+            
+            // Показатели выживания
+            health: 100,
+            hunger: 100,
+            thirst: 100,
+            energy: 100,
+            warmth: 100,
+            
+            // Инвентарь
+            inventory: {
+                wood: 5,
+                food: 3,
+                water: 2,
+                tools: 0,
+                materials: 2,
+                medicine: 0
+            },
+            
+            // Игровые объекты
+            shelter: false,
+            fire: false,
+            
+            // Погодные условия
+            temperature: 15,
+            weather: 'clear',
+            
+            // Локация
+            location: 'forest'
+        };
+
+        // Элементы DOM
+        const dayCountElement = document.getElementById('day-count');
+        const timeElement = document.getElementById('time');
+        const temperatureElement = document.getElementById('temperature');
+        const weatherElement = document.getElementById('weather');
+        
+        const healthValueElement = document.getElementById('health-value');
+        const healthBarElement = document.getElementById('health-bar');
+        const hungerValueElement = document.getElementById('hunger-value');
+        const hungerBarElement = document.getElementById('hunger-bar');
+        const thirstValueElement = document.getElementById('thirst-value');
+        const thirstBarElement = document.getElementById('thirst-bar');
+        const energyValueElement = document.getElementById('energy-value');
+        const energyBarElement = document.getElementById('energy-bar');
+        const warmthValueElement = document.getElementById('warmth-value');
+        const warmthBarElement = document.getElementById('warmth-bar');
+        
+        const woodCountElement = document.getElementById('wood-count');
+        const foodCountElement = document.getElementById('food-count');
+        const waterCountElement = document.getElementById('water-count');
+        const toolsCountElement = document.getElementById('tools-count');
+        const materialsCountElement = document.getElementById('materials-count');
+        const medicineCountElement = document.getElementById('medicine-count');
+        
+        const eventsLogElement = document.getElementById('events-log');
+        const gameOverElement = document.getElementById('game-over');
+        const gameOverReasonElement = document.getElementById('game-over-reason');
+        const survivalDaysElement = document.getElementById('survival-days');
+        
+        const locationNameElement = document.getElementById('location-name');
+        const locationDescriptionElement = document.getElementById('location-description');
+        
+        // Кнопки действий
+        const gatherWoodBtn = document.getElementById('gather-wood');
+        const huntBtn = document.getElementById('hunt');
+        const exploreBtn = document.getElementById('explore');
+        const restBtn = document.getElementById('rest');
+        const buildShelterBtn = document.getElementById('build-shelter');
+        const makeFireBtn = document.getElementById('make-fire');
+        const findWaterBtn = document.getElementById('find-water');
+        const craftToolsBtn = document.getElementById('craft-tools');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Функции игры
+        function updateUI() {
+            // Обновление статистики
+            dayCountElement.textContent = gameState.day;
+            timeElement.textContent = formatTime(gameState.time);
+            temperatureElement.textContent = `${gameState.temperature}°C`;
+            weatherElement.textContent = getWeatherText(gameState.weather);
+            
+            // Обновление показателей выживания
+            healthValueElement.textContent = `${Math.round(gameState.health)}%`;
+            healthBarElement.style.width = `${gameState.health}%`;
+            
+            hungerValueElement.textContent = `${Math.round(gameState.hunger)}%`;
+            hungerBarElement.style.width = `${gameState.hunger}%`;
+            
+            thirstValueElement.textContent = `${Math.round(gameState.thirst)}%`;
+            thirstBarElement.style.width = `${gameState.thirst}%`;
+            
+            energyValueElement.textContent = `${Math.round(gameState.energy)}%`;
+            energyBarElement.style.width = `${gameState.energy}%`;
+            
+            warmthValueElement.textContent = `${Math.round(gameState.warmth)}%`;
+            warmthBarElement.style.width = `${gameState.warmth}%`;
+            
+            // Обновление инвентаря
+            woodCountElement.textContent = gameState.inventory.wood;
+            foodCountElement.textContent = gameState.inventory.food;
+            waterCountElement.textContent = gameState.inventory.water;
+            toolsCountElement.textContent = gameState.inventory.tools;
+            materialsCountElement.textContent = gameState.inventory.materials;
+            medicineCountElement.textContent = gameState.inventory.medicine;
+            
+            // Обновление кнопок в зависимости от состояния
+            buildShelterBtn.disabled = gameState.inventory.wood < 10 || gameState.shelter;
+            makeFireBtn.disabled = gameState.inventory.wood < 3 || gameState.fire;
+            craftToolsBtn.disabled = gameState.inventory.materials < 5;
+        }
+        
+        function formatTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }
+        
+        function getWeatherText(weather) {
+            const weatherTexts = {
+                'clear': 'Ясно',
+                'cloudy': 'Облачно',
+                'rain': 'Дождь',
+                'storm': 'Шторм'
+            };
+            return weatherTexts[weather] || 'Ясно';
+        }
+        
+        function addEvent(message) {
+            const time = formatTime(gameState.time);
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event';
+            eventElement.innerHTML = `<span class="event-time">День ${gameState.day}, ${time}</span><span>${message}</span>`;
+            eventsLogElement.prepend(eventElement);
+            
+            // Ограничиваем количество событий в журнале
+            if (eventsLogElement.children.length > 20) {
+                eventsLogElement.removeChild(eventsLogElement.lastChild);
+            }
+        }
+        
+        function advanceTime(minutes) {
+            gameState.time += minutes;
+            
+            // Переход на следующий день
+            if (gameState.time >= 1440) { // 24 часа * 60 минут
+                gameState.time -= 1440;
+                gameState.day++;
+                
+                // Обновляем погоду каждый день
+                updateWeather();
+            }
+            
+            // Уменьшение показателей со временем
+            gameState.hunger = Math.max(0, gameState.hunger - (minutes / 60));
+            gameState.thirst = Math.max(0, gameState.thirst - (minutes / 60 * 1.5));
+            gameState.energy = Math.min(100, gameState.energy + (minutes / 60 * 0.5));
+            
+            // Влияние температуры на тепло
+            if (gameState.temperature < 10) {
+                gameState.warmth = Math.max(0, gameState.warmth - (minutes / 60 * 2));
+            } else if (gameState.temperature < 5) {
+                gameState.warmth = Math.max(0, gameState.warmth - (minutes / 60 * 4));
+            } else {
+                gameState.warmth = Math.min(100, gameState.warmth + (minutes / 60 * 0.5));
+            }
+            
+            // Влияние укрытия и костра на тепло
+            if (gameState.shelter) {
+                gameState.warmth = Math.min(100, gameState.warmth + (minutes / 60 * 1));
+            }
+            
+            if (gameState.fire) {
+                gameState.warmth = Math.min(100, gameState.warmth + (minutes / 60 * 3));
+            }
+            
+            // Влияние низких показателей на здоровье
+            if (gameState.hunger <= 0) {
+                gameState.health = Math.max(0, gameState.health - (minutes / 60 * 0.5));
+                addEvent("Вы голодаете. Найдите еду.");
+            }
+            
+            if (gameState.thirst <= 0) {
+                gameState.health = Math.max(0, gameState.health - (minutes / 60 * 1));
+                addEvent("Вы обезвожены. Найдите воду.");
+            }
+            
+            if (gameState.warmth <= 0) {
+                gameState.health = Math.max(0, gameState.health - (minutes / 60 * 2));
+                addEvent("Вы замерзаете. Найдите способ согреться.");
+            }
+            
+            // Проверка условий окончания игры
+            if (gameState.health <= 0) {
+                endGame("Вы не смогли выжить в суровых условиях.");
+            }
+        }
+        
+        function updateWeather() {
+            const weatherTypes = ['clear', 'cloudy', 'rain', 'storm'];
+            const weights = [40, 30, 20, 10]; // Вероятности в %
+            
+            let random = Math.random() * 100;
+            let cumulativeWeight = 0;
+            
+            for (let i = 0; i < weatherTypes.length; i++) {
+                cumulativeWeight += weights[i];
+                if (random <= cumulativeWeight) {
+                    gameState.weather = weatherTypes[i];
+                    break;
+                }
+            }
+            
+            // Установка температуры в зависимости от погоды
+            switch (gameState.weather) {
+                case 'clear':
+                    gameState.temperature = 15 + Math.floor(Math.random() * 10);
+                    break;
+                case 'cloudy':
+                    gameState.temperature = 10 + Math.floor(Math.random() * 8);
+                    break;
+                case 'rain':
+                    gameState.temperature = 5 + Math.floor(Math.random() * 8);
+                    break;
+                case 'storm':
+                    gameState.temperature = 3 + Math.floor(Math.random() * 5);
+                    break;
+            }
+            
+            addEvent(`Погода изменилась: ${getWeatherText(gameState.weather)}. Температура: ${gameState.temperature}°C.`);
+        }
+        
+        function endGame(reason) {
+            gameState.running = false;
+            gameOverReasonElement.textContent = reason;
+            survivalDaysElement.textContent = gameState.day;
+            gameOverElement.style.display = 'flex';
+        }
+        
+        function restartGame() {
+            gameState.day = 1;
+            gameState.time = 480;
+            gameState.running = true;
+            
+            gameState.health = 100;
+            gameState.hunger = 100;
+            gameState.thirst = 100;
+            gameState.energy = 100;
+            gameState.warmth = 100;
+            
+            gameState.inventory = {
+                wood: 5,
+                food: 3,
+                water: 2,
+                tools: 0,
+                materials: 2,
+                medicine: 0
+            };
+            
+            gameState.shelter = false;
+            gameState.fire = false;
+            
+            gameState.temperature = 15;
+            gameState.weather = 'clear';
+            
+            eventsLogElement.innerHTML = '<div class="event"><span class="event-time">День 1, 08:00</span><span>Вы оказались одни в незнакомом лесу. Нужно найти ресурсы для выживания.</span></div>';
+            
+            gameOverElement.style.display = 'none';
+            
+            updateUI();
+        }
+        
+        // Обработчики действий
+        gatherWoodBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const woodGathered = 2 + Math.floor(Math.random() * 4);
+            gameState.inventory.wood += woodGathered;
+            gameState.energy -= 10;
+            
+            addEvent(`Вы собрали ${woodGathered} единиц дров.`);
+            advanceTime(60);
+            updateUI();
+        });
+        
+        huntBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const success = Math.random() > 0.4;
+            
+            if (success) {
+                const foodGathered = 1 + Math.floor(Math.random() * 3);
+                gameState.inventory.food += foodGathered;
+                addEvent(`Охота удалась! Вы добыли ${foodGathered} единиц еды.`);
+            } else {
+                addEvent("Охота не удалась. Вам не повезло сегодня.");
+            }
+            
+            gameState.energy -= 15;
+            advanceTime(120);
+            updateUI();
+        });
+        
+        exploreBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const foundItems = [];
+            
+            if (Math.random() > 0.6) {
+                gameState.inventory.materials += 1 + Math.floor(Math.random() * 3);
+                foundItems.push("строительные материалы");
+            }
+            
+            if (Math.random() > 0.7) {
+                gameState.inventory.medicine += 1;
+                foundItems.push("лекарственные растения");
+            }
+            
+            if (Math.random() > 0.5) {
+                gameState.inventory.water += 1;
+                foundItems.push("источник чистой воды");
+            }
+            
+            if (foundItems.length > 0) {
+                addEvent(`Исследуя местность, вы нашли: ${foundItems.join(', ')}.`);
+            } else {
+                addEvent("Исследуя местность, вы не нашли ничего полезного.");
+            }
+            
+            gameState.energy -= 8;
+            advanceTime(90);
+            updateUI();
+        });
+        
+        restBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const energyRecovered = 30 + Math.floor(Math.random() * 30);
+            gameState.energy = Math.min(100, gameState.energy + energyRecovered);
+            
+            addEvent(`Вы отдохнули и восстановили ${energyRecovered}% энергии.`);
+            advanceTime(180);
+            updateUI();
+        });
+        
+        buildShelterBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            if (gameState.inventory.wood >= 10 && !gameState.shelter) {
+                gameState.inventory.wood -= 10;
+                gameState.shelter = true;
+                
+                addEvent("Вы построили укрытие. Теперь вы защищены от непогоды.");
+            }
+            
+            gameState.energy -= 20;
+            advanceTime(120);
+            updateUI();
+        });
+        
+        makeFireBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            if (gameState.inventory.wood >= 3 && !gameState.fire) {
+                gameState.inventory.wood -= 3;
+                gameState.fire = true;
+                
+                addEvent("Вы разожгли костер. Стало значительно теплее.");
+            }
+            
+            gameState.energy -= 5;
+            advanceTime(30);
+            updateUI();
+        });
+        
+        findWaterBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const waterFound = 1 + Math.floor(Math.random() * 3);
+            gameState.inventory.water += waterFound;
+            
+            addEvent(`Вы нашли источник воды и собрали ${waterFound} единиц.`);
+            gameState.energy -= 8;
+            advanceTime(60);
+            updateUI();
+        });
+        
+        craftToolsBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            if (gameState.inventory.materials >= 5) {
+                gameState.inventory.materials -= 5;
+                gameState.inventory.tools += 1;
+                
+                addEvent("Вы создали инструменты. Теперь вы можете эффективнее собирать ресурсы.");
+            }
+            
+            gameState.energy -= 15;
+            advanceTime(90);
+            updateUI();
+        });
+        
+        restartBtn.addEventListener('click', restartGame);
+        
+        // Инициализация игры
+        updateUI();
+    </script>
+</body>
+</html>
