@@ -25,7 +25,7 @@
         
         .game-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -36,6 +36,7 @@
             padding: 20px 0;
             border-bottom: 1px solid #333;
             margin-bottom: 10px;
+            position: relative;
         }
         
         h1 {
@@ -52,9 +53,26 @@
             font-weight: 300;
         }
         
+        .rescue-counter {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            padding: 8px 15px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        
+        .rescue-days {
+            color: #4caf50;
+            font-weight: 500;
+        }
+        
         .game-layout {
             display: grid;
-            grid-template-columns: 1fr 300px;
+            grid-template-columns: 1fr 320px;
             gap: 20px;
         }
         
@@ -64,6 +82,8 @@
             border-radius: 2px;
             padding: 20px;
             min-height: 500px;
+            display: flex;
+            flex-direction: column;
         }
         
         .location-description {
@@ -86,7 +106,7 @@
         
         .actions {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
             margin-bottom: 25px;
         }
@@ -100,6 +120,7 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.95rem;
+            border-radius: 2px;
         }
         
         .action-btn:hover {
@@ -121,6 +142,45 @@
             border-color: #333;
         }
         
+        .consume-section {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+        
+        .consume-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .consume-btn {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .consume-btn:hover {
+            background-color: #333;
+        }
+        
+        .consume-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .consume-btn:disabled:hover {
+            background-color: #2a2a2a;
+        }
+        
         .events-log {
             background-color: #0d0d0d;
             border: 1px solid #333;
@@ -128,6 +188,7 @@
             height: 200px;
             overflow-y: auto;
             font-size: 0.9rem;
+            margin-top: 20px;
         }
         
         .event {
@@ -196,6 +257,7 @@
             padding: 8px 10px;
             background-color: #1a1a1a;
             border: 1px solid #333;
+            border-radius: 2px;
         }
         
         .item-name {
@@ -222,6 +284,8 @@
             height: 6px;
             background-color: #333;
             position: relative;
+            border-radius: 3px;
+            overflow: hidden;
         }
         
         .condition-fill {
@@ -229,6 +293,7 @@
             position: absolute;
             left: 0;
             top: 0;
+            transition: width 0.3s ease;
         }
         
         .health .condition-fill {
@@ -296,11 +361,49 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
+            border-radius: 2px;
         }
         
         .restart-btn:hover {
             background-color: #222;
             border-color: #555;
+        }
+        
+        .rescue-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            display: none;
+        }
+        
+        .rescue-content {
+            background-color: #111;
+            border: 1px solid #333;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .rescue-screen h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #4caf50;
+            font-weight: 400;
+        }
+        
+        .rescue-screen p {
+            margin-bottom: 25px;
+            color: #ccc;
+            line-height: 1.6;
         }
         
         @media (max-width: 768px) {
@@ -311,6 +414,13 @@
             .actions {
                 grid-template-columns: 1fr;
             }
+            
+            .rescue-counter {
+                position: static;
+                transform: none;
+                margin-top: 10px;
+                display: inline-block;
+            }
         }
     </style>
 </head>
@@ -319,13 +429,14 @@
         <header>
             <h1>ВЫЖИВАНИЕ</h1>
             <p class="subtitle">Боритесь с голодом, жаждой и стихией, чтобы выжить</p>
+            <div class="rescue-counter">Спасение через: <span class="rescue-days" id="rescue-days">100</span> дней</div>
         </header>
         
         <div class="game-layout">
             <div class="main-panel">
                 <div class="location-description">
                     <h2 id="location-name">ЛЕС</h2>
-                    <p id="location-description">Вы находитесь в густом лесу. Вокруг вас деревья, кусты и следы диких животных. Воздух прохладен и влажен.</p>
+                    <p id="location-description">Вы находитесь в густом лесу после крушения самолета. Вокруг вас деревья, кусты и следы диких животных. Воздух прохладен и влажен. Ваша задача - продержаться 100 дней до прибытия спасателей.</p>
                 </div>
                 
                 <div class="actions">
@@ -337,13 +448,35 @@
                     <button class="action-btn" id="make-fire">Разжечь костер</button>
                     <button class="action-btn" id="find-water">Найти воду</button>
                     <button class="action-btn" id="craft-tools">Создать инструменты</button>
+                    <button class="action-btn" id="fish">Рыбачить</button>
+                    <button class="action-btn" id="forage">Собирать ягоды и грибы</button>
+                    <button class="action-btn" id="trap">Установить ловушки</button>
+                    <button class="action-btn" id="repair">Ремонтировать укрытие</button>
                 </div>
                 
-                <h3 class="panel-title">ЖУРНАЛ СОБЫТИЙ</h3>
+                <div class="consume-section">
+                    <h3 class="panel-title">ПОТРЕБЛЕНИЕ</h3>
+                    <div class="consume-buttons">
+                        <button class="consume-btn" id="eat-food">
+                            <span>🍖</span> Поесть (1 еда)
+                        </button>
+                        <button class="consume-btn" id="drink-water">
+                            <span>💧</span> Попить (1 вода)
+                        </button>
+                        <button class="consume-btn" id="use-medicine">
+                            <span>💊</span> Лечиться (1 лекарство)
+                        </button>
+                        <button class="consume-btn" id="add-firewood">
+                            <span>🔥</span> Добавить дров в костер (2 дрова)
+                        </button>
+                    </div>
+                </div>
+                
+                <h3 class="panel-title" style="margin-top: 20px;">ЖУРНАЛ СОБЫТИЙ</h3>
                 <div class="events-log" id="events-log">
                     <div class="event">
                         <span class="event-time">День 1, 08:00</span>
-                        <span>Вы оказались одни в незнакомом лесу. Нужно найти ресурсы для выживания.</span>
+                        <span>Вы пережили крушение самолета в незнакомом лесу. Нужно найти ресурсы для выживания и продержаться 100 дней до спасателей.</span>
                     </div>
                 </div>
             </div>
@@ -366,6 +499,14 @@
                     <div class="stat">
                         <span class="stat-name">Погода:</span>
                         <span class="stat-value" id="weather">Ясно</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">Состояние укрытия:</span>
+                        <span class="stat-value" id="shelter-condition">Нет</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">Состояние костра:</span>
+                        <span class="stat-value" id="fire-condition">Нет</span>
                     </div>
                 </div>
                 
@@ -445,6 +586,14 @@
                             <span class="item-name">Лекарства</span>
                             <span class="item-count" id="medicine-count">0</span>
                         </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Рыба</span>
+                            <span class="item-count" id="fish-count">0</span>
+                        </div>
+                        <div class="inventory-item">
+                            <span class="item-name">Ловушки</span>
+                            <span class="item-count" id="trap-count">0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -459,6 +608,16 @@
             <button class="restart-btn" id="restart-btn">Начать заново</button>
         </div>
     </div>
+    
+    <div class="rescue-screen" id="rescue-screen">
+        <div class="rescue-content">
+            <h2>ВЫ СПАСЕНЫ!</h2>
+            <p>После 100 дней выживания в дикой природе, спасатели наконец-то нашли вас!</p>
+            <p>Вы успешно пережили все трудности и опасности леса.</p>
+            <p>Ваше мужество и умение выживать впечатлили спасательную команду.</p>
+            <button class="restart-btn" id="new-game-btn">Новая игра</button>
+        </div>
+    </div>
 
     <script>
         // Игровое состояние
@@ -466,6 +625,7 @@
             day: 1,
             time: 480, // в минутах (8:00)
             running: true,
+            daysToRescue: 100,
             
             // Показатели выживания
             health: 100,
@@ -481,19 +641,34 @@
                 water: 2,
                 tools: 0,
                 materials: 2,
-                medicine: 0
+                medicine: 0,
+                fish: 0,
+                traps: 0
             },
             
             // Игровые объекты
             shelter: false,
+            shelterHealth: 0,
             fire: false,
+            fireDuration: 0,
             
             // Погодные условия
             temperature: 15,
             weather: 'clear',
             
-            // Локация
-            location: 'forest'
+            // События
+            specialEvents: [
+                "Нашли заброшенный лагерь с припасами",
+                "Заметили следы медведя рядом с укрытием",
+                "Наткнулись на ягодную поляну",
+                "Обнаружили чистый родник",
+                "Нашли обломки самолета с полезными вещами",
+                "Заметили дым вдали - возможно, другие выжившие",
+                "Нашли старую карту местности",
+                "Обнаружили пещеру, которая может стать укрытием",
+                "Наткнулись на заброшенную хижину лесника",
+                "Заметили стаю волков вдалеке"
+            ]
         };
 
         // Элементы DOM
@@ -501,6 +676,9 @@
         const timeElement = document.getElementById('time');
         const temperatureElement = document.getElementById('temperature');
         const weatherElement = document.getElementById('weather');
+        const rescueDaysElement = document.getElementById('rescue-days');
+        const shelterConditionElement = document.getElementById('shelter-condition');
+        const fireConditionElement = document.getElementById('fire-condition');
         
         const healthValueElement = document.getElementById('health-value');
         const healthBarElement = document.getElementById('health-bar');
@@ -519,11 +697,14 @@
         const toolsCountElement = document.getElementById('tools-count');
         const materialsCountElement = document.getElementById('materials-count');
         const medicineCountElement = document.getElementById('medicine-count');
+        const fishCountElement = document.getElementById('fish-count');
+        const trapCountElement = document.getElementById('trap-count');
         
         const eventsLogElement = document.getElementById('events-log');
         const gameOverElement = document.getElementById('game-over');
         const gameOverReasonElement = document.getElementById('game-over-reason');
         const survivalDaysElement = document.getElementById('survival-days');
+        const rescueScreenElement = document.getElementById('rescue-screen');
         
         const locationNameElement = document.getElementById('location-name');
         const locationDescriptionElement = document.getElementById('location-description');
@@ -537,7 +718,18 @@
         const makeFireBtn = document.getElementById('make-fire');
         const findWaterBtn = document.getElementById('find-water');
         const craftToolsBtn = document.getElementById('craft-tools');
+        const fishBtn = document.getElementById('fish');
+        const forageBtn = document.getElementById('forage');
+        const trapBtn = document.getElementById('trap');
+        const repairBtn = document.getElementById('repair');
         const restartBtn = document.getElementById('restart-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        
+        // Кнопки потребления
+        const eatFoodBtn = document.getElementById('eat-food');
+        const drinkWaterBtn = document.getElementById('drink-water');
+        const useMedicineBtn = document.getElementById('use-medicine');
+        const addFirewoodBtn = document.getElementById('add-firewood');
 
         // Функции игры
         function updateUI() {
@@ -546,6 +738,13 @@
             timeElement.textContent = formatTime(gameState.time);
             temperatureElement.textContent = `${gameState.temperature}°C`;
             weatherElement.textContent = getWeatherText(gameState.weather);
+            rescueDaysElement.textContent = gameState.daysToRescue;
+            
+            // Обновление состояния объектов
+            shelterConditionElement.textContent = gameState.shelter ? 
+                `${Math.round(gameState.shelterHealth)}%` : "Нет";
+            fireConditionElement.textContent = gameState.fire ? 
+                `${Math.round(gameState.fireDuration)} ч` : "Нет";
             
             // Обновление показателей выживания
             healthValueElement.textContent = `${Math.round(gameState.health)}%`;
@@ -570,11 +769,20 @@
             toolsCountElement.textContent = gameState.inventory.tools;
             materialsCountElement.textContent = gameState.inventory.materials;
             medicineCountElement.textContent = gameState.inventory.medicine;
+            fishCountElement.textContent = gameState.inventory.fish;
+            trapCountElement.textContent = gameState.inventory.traps;
             
             // Обновление кнопок в зависимости от состояния
             buildShelterBtn.disabled = gameState.inventory.wood < 10 || gameState.shelter;
             makeFireBtn.disabled = gameState.inventory.wood < 3 || gameState.fire;
             craftToolsBtn.disabled = gameState.inventory.materials < 5;
+            repairBtn.disabled = !gameState.shelter || gameState.shelterHealth >= 100;
+            addFirewoodBtn.disabled = !gameState.fire || gameState.inventory.wood < 2;
+            
+            // Обновление кнопок потребления
+            eatFoodBtn.disabled = gameState.inventory.food < 1;
+            drinkWaterBtn.disabled = gameState.inventory.water < 1;
+            useMedicineBtn.disabled = gameState.inventory.medicine < 1;
         }
         
         function formatTime(minutes) {
@@ -588,7 +796,8 @@
                 'clear': 'Ясно',
                 'cloudy': 'Облачно',
                 'rain': 'Дождь',
-                'storm': 'Шторм'
+                'storm': 'Шторм',
+                'fog': 'Туман'
             };
             return weatherTexts[weather] || 'Ясно';
         }
@@ -609,34 +818,66 @@
         function advanceTime(minutes) {
             gameState.time += minutes;
             
+            // Уменьшение продолжительности костра
+            if (gameState.fire) {
+                gameState.fireDuration -= minutes / 60;
+                if (gameState.fireDuration <= 0) {
+                    gameState.fire = false;
+                    addEvent("Костер погас.");
+                }
+            }
+            
+            // Уменьшение состояния укрытия со временем
+            if (gameState.shelter) {
+                // Укрытие изнашивается быстрее в плохую погоду
+                let wearRate = 0.1;
+                if (gameState.weather === 'storm') wearRate = 0.3;
+                else if (gameState.weather === 'rain') wearRate = 0.2;
+                
+                gameState.shelterHealth = Math.max(0, gameState.shelterHealth - wearRate * (minutes / 60));
+                if (gameState.shelterHealth <= 0) {
+                    gameState.shelter = false;
+                    addEvent("Ваше укрытие разрушилось!");
+                }
+            }
+            
             // Переход на следующий день
             if (gameState.time >= 1440) { // 24 часа * 60 минут
                 gameState.time -= 1440;
                 gameState.day++;
+                gameState.daysToRescue--;
+                
+                // Проверка на спасение
+                if (gameState.daysToRescue <= 0) {
+                    rescuePlayer();
+                    return;
+                }
                 
                 // Обновляем погоду каждый день
                 updateWeather();
+                
+                // Специальное событие раз в 3-5 дней
+                if (Math.random() < 0.3) {
+                    const randomEvent = gameState.specialEvents[Math.floor(Math.random() * gameState.specialEvents.length)];
+                    addEvent(`Специальное событие: ${randomEvent}`);
+                }
             }
             
             // Уменьшение показателей со временем
-            gameState.hunger = Math.max(0, gameState.hunger - (minutes / 60));
-            gameState.thirst = Math.max(0, gameState.thirst - (minutes / 60 * 1.5));
+            gameState.hunger = Math.max(0, gameState.hunger - (minutes / 60 * 0.8));
+            gameState.thirst = Math.max(0, gameState.thirst - (minutes / 60 * 1.2));
             gameState.energy = Math.min(100, gameState.energy + (minutes / 60 * 0.5));
             
             // Влияние температуры на тепло
             if (gameState.temperature < 10) {
-                gameState.warmth = Math.max(0, gameState.warmth - (minutes / 60 * 2));
+                gameState.warmth = Math.max(0, gameState.warmth - (minutes / 60 * (gameState.shelter ? 1 : 2)));
             } else if (gameState.temperature < 5) {
-                gameState.warmth = Math.max(0, gameState.warmth - (minutes / 60 * 4));
+                gameState.warmth = Math.max(0, gameState.warmth - (minutes / 60 * (gameState.shelter ? 2 : 4)));
             } else {
                 gameState.warmth = Math.min(100, gameState.warmth + (minutes / 60 * 0.5));
             }
             
-            // Влияние укрытия и костра на тепло
-            if (gameState.shelter) {
-                gameState.warmth = Math.min(100, gameState.warmth + (minutes / 60 * 1));
-            }
-            
+            // Влияние костра на тепло
             if (gameState.fire) {
                 gameState.warmth = Math.min(100, gameState.warmth + (minutes / 60 * 3));
             }
@@ -644,17 +885,17 @@
             // Влияние низких показателей на здоровье
             if (gameState.hunger <= 0) {
                 gameState.health = Math.max(0, gameState.health - (minutes / 60 * 0.5));
-                addEvent("Вы голодаете. Найдите еду.");
+                if (Math.random() < 0.1) addEvent("Вы голодаете. Найдите еду.");
             }
             
             if (gameState.thirst <= 0) {
                 gameState.health = Math.max(0, gameState.health - (minutes / 60 * 1));
-                addEvent("Вы обезвожены. Найдите воду.");
+                if (Math.random() < 0.1) addEvent("Вы обезвожены. Найдите воду.");
             }
             
             if (gameState.warmth <= 0) {
                 gameState.health = Math.max(0, gameState.health - (minutes / 60 * 2));
-                addEvent("Вы замерзаете. Найдите способ согреться.");
+                if (Math.random() < 0.1) addEvent("Вы замерзаете. Найдите способ согреться.");
             }
             
             // Проверка условий окончания игры
@@ -664,8 +905,8 @@
         }
         
         function updateWeather() {
-            const weatherTypes = ['clear', 'cloudy', 'rain', 'storm'];
-            const weights = [40, 30, 20, 10]; // Вероятности в %
+            const weatherTypes = ['clear', 'cloudy', 'rain', 'storm', 'fog'];
+            const weights = [30, 25, 20, 10, 15]; // Вероятности в %
             
             let random = Math.random() * 100;
             let cumulativeWeight = 0;
@@ -692,6 +933,9 @@
                 case 'storm':
                     gameState.temperature = 3 + Math.floor(Math.random() * 5);
                     break;
+                case 'fog':
+                    gameState.temperature = 8 + Math.floor(Math.random() * 6);
+                    break;
             }
             
             addEvent(`Погода изменилась: ${getWeatherText(gameState.weather)}. Температура: ${gameState.temperature}°C.`);
@@ -704,10 +948,16 @@
             gameOverElement.style.display = 'flex';
         }
         
+        function rescuePlayer() {
+            gameState.running = false;
+            rescueScreenElement.style.display = 'flex';
+        }
+        
         function restartGame() {
             gameState.day = 1;
             gameState.time = 480;
             gameState.running = true;
+            gameState.daysToRescue = 100;
             
             gameState.health = 100;
             gameState.hunger = 100;
@@ -721,19 +971,67 @@
                 water: 2,
                 tools: 0,
                 materials: 2,
-                medicine: 0
+                medicine: 0,
+                fish: 0,
+                traps: 0
             };
             
             gameState.shelter = false;
+            gameState.shelterHealth = 0;
             gameState.fire = false;
+            gameState.fireDuration = 0;
             
             gameState.temperature = 15;
             gameState.weather = 'clear';
             
-            eventsLogElement.innerHTML = '<div class="event"><span class="event-time">День 1, 08:00</span><span>Вы оказались одни в незнакомом лесу. Нужно найти ресурсы для выживания.</span></div>';
+            eventsLogElement.innerHTML = '<div class="event"><span class="event-time">День 1, 08:00</span><span>Вы пережили крушение самолета в незнакомом лесу. Нужно найти ресурсы для выживания и продержаться 100 дней до спасателей.</span></div>';
             
             gameOverElement.style.display = 'none';
+            rescueScreenElement.style.display = 'none';
             
+            updateUI();
+        }
+        
+        // Функции потребления ресурсов
+        function consumeFood() {
+            if (gameState.inventory.food < 1) return;
+            
+            gameState.inventory.food--;
+            gameState.hunger = Math.min(100, gameState.hunger + 40);
+            gameState.health = Math.min(100, gameState.health + 5);
+            
+            addEvent("Вы поели. Сытость восстановлена.");
+            updateUI();
+        }
+        
+        function consumeWater() {
+            if (gameState.inventory.water < 1) return;
+            
+            gameState.inventory.water--;
+            gameState.thirst = Math.min(100, gameState.thirst + 60);
+            gameState.health = Math.min(100, gameState.health + 3);
+            
+            addEvent("Вы попили воды. Жажда утолена.");
+            updateUI();
+        }
+        
+        function consumeMedicine() {
+            if (gameState.inventory.medicine < 1) return;
+            
+            gameState.inventory.medicine--;
+            gameState.health = Math.min(100, gameState.health + 30);
+            
+            addEvent("Вы использовали лекарство. Здоровье восстановлено.");
+            updateUI();
+        }
+        
+        function addFirewoodToFire() {
+            if (gameState.inventory.wood < 2 || !gameState.fire) return;
+            
+            gameState.inventory.wood -= 2;
+            gameState.fireDuration += 4;
+            
+            addEvent("Вы добавили дров в костер. Он будет гореть дольше.");
             updateUI();
         }
         
@@ -741,11 +1039,11 @@
         gatherWoodBtn.addEventListener('click', () => {
             if (!gameState.running) return;
             
-            const woodGathered = 2 + Math.floor(Math.random() * 4);
+            const woodGathered = 2 + Math.floor(Math.random() * 4) + (gameState.inventory.tools > 0 ? 2 : 0);
             gameState.inventory.wood += woodGathered;
             gameState.energy -= 10;
             
-            addEvent(`Вы собрали ${woodGathered} единиц дров.`);
+            addEvent(`Вы собрали ${woodGathered} единиц дров.${gameState.inventory.tools > 0 ? ' Инструменты помогли собрать больше.' : ''}`);
             advanceTime(60);
             updateUI();
         });
@@ -756,11 +1054,17 @@
             const success = Math.random() > 0.4;
             
             if (success) {
-                const foodGathered = 1 + Math.floor(Math.random() * 3);
+                const foodGathered = 1 + Math.floor(Math.random() * 3) + (gameState.inventory.tools > 0 ? 1 : 0);
                 gameState.inventory.food += foodGathered;
                 addEvent(`Охота удалась! Вы добыли ${foodGathered} единиц еды.`);
             } else {
-                addEvent("Охота не удалась. Вам не повезло сегодня.");
+                const injury = Math.random() > 0.7;
+                if (injury) {
+                    gameState.health -= 15;
+                    addEvent("Охота не удалась. Вас ранил дикий зверь!");
+                } else {
+                    addEvent("Охота не удалась. Вам не повезло сегодня.");
+                }
             }
             
             gameState.energy -= 15;
@@ -774,8 +1078,9 @@
             const foundItems = [];
             
             if (Math.random() > 0.6) {
-                gameState.inventory.materials += 1 + Math.floor(Math.random() * 3);
-                foundItems.push("строительные материалы");
+                const materialsFound = 1 + Math.floor(Math.random() * 3);
+                gameState.inventory.materials += materialsFound;
+                foundItems.push(`${materialsFound} строительных материалов`);
             }
             
             if (Math.random() > 0.7) {
@@ -784,8 +1089,17 @@
             }
             
             if (Math.random() > 0.5) {
-                gameState.inventory.water += 1;
-                foundItems.push("источник чистой воды");
+                const waterFound = 1 + Math.floor(Math.random() * 2);
+                gameState.inventory.water += waterFound;
+                foundItems.push(`${waterFound} единиц воды`);
+            }
+            
+            // Шанс найти специальный предмет
+            if (Math.random() > 0.85) {
+                const specialItems = ["карту местности", "фонарик", "спальный мешок", "топор"];
+                const specialItem = specialItems[Math.floor(Math.random() * specialItems.length)];
+                foundItems.push(specialItem);
+                addEvent(`Исследуя местность, вы нашли полезный предмет: ${specialItem}!`);
             }
             
             if (foundItems.length > 0) {
@@ -805,7 +1119,15 @@
             const energyRecovered = 30 + Math.floor(Math.random() * 30);
             gameState.energy = Math.min(100, gameState.energy + energyRecovered);
             
-            addEvent(`Вы отдохнули и восстановили ${energyRecovered}% энергии.`);
+            // Отдых в укрытии восстанавливает больше
+            if (gameState.shelter) {
+                gameState.health = Math.min(100, gameState.health + 5);
+                gameState.warmth = Math.min(100, gameState.warmth + 20);
+                addEvent(`Вы отдохнули в укрытии и восстановили ${energyRecovered}% энергии.`);
+            } else {
+                addEvent(`Вы отдохнули и восстановили ${energyRecovered}% энергии.`);
+            }
+            
             advanceTime(180);
             updateUI();
         });
@@ -816,6 +1138,7 @@
             if (gameState.inventory.wood >= 10 && !gameState.shelter) {
                 gameState.inventory.wood -= 10;
                 gameState.shelter = true;
+                gameState.shelterHealth = 100;
                 
                 addEvent("Вы построили укрытие. Теперь вы защищены от непогоды.");
             }
@@ -831,6 +1154,7 @@
             if (gameState.inventory.wood >= 3 && !gameState.fire) {
                 gameState.inventory.wood -= 3;
                 gameState.fire = true;
+                gameState.fireDuration = 3;
                 
                 addEvent("Вы разожгли костер. Стало значительно теплее.");
             }
@@ -867,10 +1191,103 @@
             updateUI();
         });
         
+        fishBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const success = Math.random() > 0.5;
+            
+            if (success) {
+                const fishCaught = 1 + Math.floor(Math.random() * 2);
+                gameState.inventory.fish += fishCaught;
+                addEvent(`Рыбалка удалась! Вы поймали ${fishCaught} рыбы.`);
+            } else {
+                addEvent("Рыбалка не удалась. Рыба сегодня не клюет.");
+            }
+            
+            gameState.energy -= 10;
+            advanceTime(90);
+            updateUI();
+        });
+        
+        forageBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            const foodFound = 1 + Math.floor(Math.random() * 2);
+            gameState.inventory.food += foodFound;
+            
+            // Шанс отравиться
+            if (Math.random() > 0.8) {
+                gameState.health -= 20;
+                addEvent(`Вы собрали ${foodFound} единиц еды, но съели ядовитые ягоды!`);
+            } else {
+                addEvent(`Вы собрали ${foodFound} единиц еды (ягоды и грибы).`);
+            }
+            
+            gameState.energy -= 5;
+            advanceTime(60);
+            updateUI();
+        });
+        
+        trapBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            if (gameState.inventory.materials >= 3) {
+                gameState.inventory.materials -= 3;
+                gameState.inventory.traps += 1;
+                
+                addEvent("Вы установили ловушку для мелкой дичи.");
+            }
+            
+            gameState.energy -= 10;
+            advanceTime(60);
+            updateUI();
+        });
+        
+        repairBtn.addEventListener('click', () => {
+            if (!gameState.running) return;
+            
+            if (gameState.shelter && gameState.inventory.materials >= 2) {
+                gameState.inventory.materials -= 2;
+                gameState.shelterHealth = Math.min(100, gameState.shelterHealth + 30);
+                
+                addEvent("Вы отремонтировали укрытие.");
+            }
+            
+            gameState.energy -= 10;
+            advanceTime(60);
+            updateUI();
+        });
+        
+        // Обработчики потребления
+        eatFoodBtn.addEventListener('click', consumeFood);
+        drinkWaterBtn.addEventListener('click', consumeWater);
+        useMedicineBtn.addEventListener('click', consumeMedicine);
+        addFirewoodBtn.addEventListener('click', addFirewoodToFire);
+        
         restartBtn.addEventListener('click', restartGame);
+        newGameBtn.addEventListener('click', restartGame);
+        
+        // Проверка ловушек каждый день
+        function checkTraps() {
+            if (gameState.inventory.traps > 0 && Math.random() > 0.5) {
+                const caught = Math.floor(Math.random() * gameState.inventory.traps) + 1;
+                gameState.inventory.food += caught;
+                addEvent(`Ваши ловушки сработали! Вы получили ${caught} единиц еды.`);
+            }
+        }
         
         // Инициализация игры
         updateUI();
+        
+        // Запуск игрового цикла
+        setInterval(() => {
+            if (gameState.running) {
+                // Проверка ловушек каждый день в полдень
+                if (Math.abs(gameState.time - 720) < 10) { // 12:00
+                    checkTraps();
+                }
+            }
+        }, 1000);
     </script>
 </body>
 </html>
